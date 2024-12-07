@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load moneylinetags %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'home' %}">Events</a></li>
+  <li class="breadcrumb-item active">{{event.matchup}}</li>
+{% endblock %}
+
+{% block content %}
+  <table class="table">
+    <thead class="thead-inverse">
+      <tr>
+        <th>Sportsbook</th>
+        <th>Side</th>
+        <th>American Odds</th>
+        <th>Decimal Odds</th>
+        <th>Hit Prob</th>
+        <th>Expected ROI</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for line in lines %}
+        <tr>
+          <td class="align-middle">{{line.sportsbook}}</td>
+          <td class="align-middle">{{line.side}}</td>
+          <td class="align-middle">{{line.odds|convert_to_american_odds}}</td>
+          <td class="align-middle">{{line.odds|floatformat:2}}</td>
+          <td class="align-middle">{{line.hit_prob|as_percent}}</td>
+          <td class="align-middle" style="color:{{line.expected_roi|positive_negative_color}}">{{line.expected_roi|as_percent_return}}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

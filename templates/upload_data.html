@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load moneylinetags %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item active">Upload Data</li>
+{% endblock %}
+
+{% block content %}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Post</button>
+  </form>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load moneylinetags %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item active">Events</li>
+{% endblock %}
+
+{% block content %}
+  <table class="table">
+    <thead class="thead-inverse">
+      <tr>
+        <th>League</th>
+        <th>Game Time</th>
+        <th>Matchup</th>
+        <th>Sportsbook</th>
+        <th>Side</th>
+        <th>Hit Prob</th>
+        <th>Expected ROI</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for event,line in event_line_info %}
+        <tr>
+          <td class="align-middle">{{event.league}}</td>
+          <td class="align-middle">{{event.game_datetime}}</td>
+          <td class="align-middle">
+            <a href="{% url 'event_info' event.pk %}">{{event.matchup}}</a>
+          </td>
+          <td class="align-middle">{{line.sportsbook}}</td>
+          <td class="align-middle">{{line.side}}</td>
+          <td class="align-middle">{{line.hit_prob|as_percent}}</td>
+          <td class="align-middle" style="color:{{line.expected_roi|positive_negative_color}}">{{line.expected_roi|as_percent_return}}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
