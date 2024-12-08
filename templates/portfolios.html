@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load moneylinetags tz %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+  <li class="breadcrumb-item active">Portfolios</li>
+{% endblock %}
+
+{% block content %}
+
+<a href="{% url 'betting_portfolios' %}" class="btn btn-success">Create New Portfolio</a>
+
+  <table class="table">
+    <thead class="thead-inverse">
+      <tr>
+        <th>Name</th>
+        <th>Date Created</th>
+        <th>Bankroll</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for port in portfolios %}
+        <tr>
+          <td class="align-middle">{{port.name}}</td>
+          <td class="align-middle">{{port.created_at|localtime}}</td>
+          <td class="align-middle">{{port.bankroll|dollar_printer}}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

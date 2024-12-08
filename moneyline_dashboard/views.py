@@ -1,12 +1,22 @@
 from django.shortcuts import render,redirect
 from django.http import HttpResponse,HttpResponseRedirect
-from .models import SportsEvent,BettingLine
+from django.contrib.auth.models import User
+from .models import SportsEvent,BettingLine,Portfolio,Wager
 from .forms import UploadFileForm
 import json
 
 # Create your views here.
 
 def home(request):
+
+    # Can later filter by user-specific constraints (e.g., minimum hit probability, time range)
+
+    n_events = SportsEvent.objects.count()
+    n_port = Portfolio.objects.count()
+
+    return render(request, 'home.html', {'n_events': n_events,'n_port':n_port})
+
+def upcoming_events(request):
 
     # Can later filter by user-specific constraints (e.g., minimum hit probability, time range)
     events = list(SportsEvent.objects.all().order_by('game_datetime'))
@@ -16,7 +26,14 @@ def home(request):
     sorted_indices = sorted(range(len(roi)), key=lambda i: -1*roi[i])
     event_line_info = [(events[i],lines[i]) for i in sorted_indices]
 
-    return render(request, 'home.html', {'event_line_info': event_line_info})
+    return render(request, 'upcoming_events.html', {'event_line_info': event_line_info})
+
+def betting_portfolios(request):
+
+    # Can later filter by user-specific constraints (e.g., minimum hit probability, time range)
+    portfolios = Portfolio.objects.all().order_by('created_at')
+
+    return render(request, 'portfolios.html', {'portfolios': portfolios})
 
 def event_info(request,pk):
     event = SportsEvent.objects.get(pk=pk)

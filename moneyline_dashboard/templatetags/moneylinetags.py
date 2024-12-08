@@ -31,3 +31,17 @@ def convert_to_american_odds(decimal_odds):
         extra_str = ''
 
     return extra_str + format(american_odds,".0f")
+
+@register.filter
+def dollar_printer(value):
+    if value >= 0:
+        return f'${value:,.0f}'
+    else:
+        return f'-${value:,.0f}'
+
+@register.filter
+def dollarcent_printer(value):
+    if value >= 0:
+        return f'${value:,.2f}'
+    else:
+        return f'-${value:,.2f}'
