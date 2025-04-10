@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+import numpy as np
 
 # Create your models here.
 class SportsEvent(models.Model):
@@ -54,12 +55,36 @@ class Portfolio(models.Model):
     name = models.CharField("Name",max_length=255,unique=True)
     created_by = models.ForeignKey(User,related_name='portfolio_user',on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    bankroll = models.DecimalField("Bankroll", max_digits=10, decimal_places=2,null=True)
-    original_bankroll = models.DecimalField("Original Bankroll", max_digits=10, decimal_places=6,null=True)
     active = models.BooleanField(default=True)
 
+    @property
+    def value(self):
+        contributions = np.array([cf.value for cf in Cashflow.objects.filter(portfolio=self,cashflow_type=CashflowTypeChoices.CONTRIBUTION)]).astype(float)
+        distributions = np.array([cf.value for cf in Cashflow.objects.filter(portfolio=self,cashflow_type=CashflowTypeChoices.DISTRIBUTION)]).astype(float)
+        internal_cashflows = np.array([cf.value for cf in Cashflow.objects.filter(portfolio=self,cashflow_type=CashflowTypeChoices.INTERNAL)]).astype(float)
+        return contributions.sum() - distributions.sum() + internal_cashflows.sum()
+
+    @property
+    def available_cash(self):
+        unsettled_bets = np.array([w.stake for w in Wager.objects.filter(portfolio=self,settled=False)]).astype(float)
+        return self.value - unsettled_bets.sum()
+
     def __str__(self):
-        return self.name
+        return self.name + ' - ' + f'${self.value:,.2f}'
+
+class CashflowTypeChoices(models.TextChoices):
+    CONTRIBUTION = "Contribution"
+    DISTRIBUTION = "Distribution"
+    INTERNAL = "Internal"
+
+class Cashflow(models.Model):
+    cashflow_type = models.CharField(max_length=255, choices=CashflowTypeChoices.choices, default=CashflowTypeChoices.INTERNAL)
+    datetime = models.DateTimeField(default=timezone.now())
+    value = models.DecimalField("value", max_digits=10, decimal_places=2, default=0)
+    portfolio = models.ForeignKey(Portfolio,related_name='cashflow_portfolio',null=True,on_delete=models.PROTECT)
+
+    def __str__(self):
+        return  self.portfolio.name + ' - ' + self.cashflow_type + ': ' f'${self.value:,.2f}' + ' (' + self.datetime.strftime("%Y-%m-%d") + ')'
 
 class Wager(models.Model):
     created_by = models.ForeignKey(User,related_name='wager_user',on_delete=models.CASCADE)
@@ -75,7 +100,17 @@ class Wager(models.Model):
     closing_hit_prob = models.DecimalField(null=True,max_digits=10, decimal_places=6)
     settled = models.BooleanField(default=False)
     hit = models.BooleanField(default=False)
-    net_payout = models.DecimalField(null=True,max_digits=10, decimal_places=2)
+
+    @property
+    def net_payout(self):
+        if self.settled:
+            if self.hit:
+                return self.stake*(self.odds - 1)
+            else:
+                return -1*self.stake
+        else:
+            return 0
+
 
     def __str__(self):
         return self.side + ' - ' + self.sportsbook
